@@ -20,11 +20,12 @@ class PyParrot(app_gui.MyFrame1):
         self.lc_commands.InsertColumn(0, 'command', width=300)
 
         self.bebop = Bebop()
+        self.isConnected = False
     
     def OnConnect( self, event ):
-        state = self.bebop.connect(10)
+        self.isConnected = self.bebop.connect(10)
         statusText = 'Connected'
-        if not state:
+        if not self.isConnected:
             statusText = 'Not ' + statusText
         self.statusBar.SetStatusText(statusText)
 
@@ -103,6 +104,9 @@ class PyParrot(app_gui.MyFrame1):
         """Go through each item in lc_commands and convert the string to 
         a list. Then use the first item in the list to determine the 
         command type, and the rest of the items are the params"""
+        if not self.isConnected:
+            return
+
         for i in range(self.lc_commands.GetItemCount()):
             args = self.lc_commands.GetItemText(i).split(',')
             self.statusBar.SetStatusText(f'Executing command: {args}', 1)
@@ -129,7 +133,10 @@ class PyParrot(app_gui.MyFrame1):
         self.lc_commands.InsertItem(self.lc_commands.GetItemCount(), cmd)
         self.statusBar.SetStatusText(f'Added command: {cmd}', 1)
 # end of class
-
-application = wx.App(False) # create new application
-PyParrot(None).Show(True) # build and show our frame
-application.MainLoop() # run the application
+if __name__ == "__main__":
+    try:
+        application = wx.App(False) # create new application
+        PyParrot(None).Show(True) # build and show our frame
+        application.MainLoop() # run the application
+    except Exception as e:
+        print(e)

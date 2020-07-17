@@ -67,7 +67,7 @@ class MyFrame1 ( wx.Frame ):
 		self.fld_z = wx.TextCtrl( self.m_panel2, wx.ID_ANY, u"z", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer5.Add( self.fld_z, 1, wx.ALL, 5 )
 
-		self.fld_radians = wx.TextCtrl( self.m_panel2, wx.ID_ANY, u"radians", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.fld_radians = wx.TextCtrl( self.m_panel2, wx.ID_ANY, u"degrees", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer5.Add( self.fld_radians, 1, wx.ALL, 5 )
 
 		self.btn_addRelative = wx.Button( self.m_panel2, wx.ID_ANY, u"Add", wx.DefaultPosition, wx.DefaultSize, 0 )
