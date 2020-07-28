@@ -121,7 +121,7 @@ class MyFrame1 ( wx.Frame ):
 		self.m_panel5 = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer12 = wx.BoxSizer( wx.HORIZONTAL )
 
-		fld_directionChoices = [ u"up", u"down", u"left", u"right" ]
+		fld_directionChoices = [ u"front", u"back", u"left", u"right" ]
 		self.fld_direction = wx.ComboBox( self.m_panel5, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, fld_directionChoices, 0 )
 		self.fld_direction.SetSelection( 0 )
 		bSizer12.Add( self.fld_direction, 1, wx.ALL, 5 )
