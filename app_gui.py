@@ -54,7 +54,7 @@ class MyFrame1 ( wx.Frame ):
 		self.m_panel6.SetSizer( bSizer131 )
 		self.m_panel6.Layout()
 		bSizer131.Fit( self.m_panel6 )
-		self.m_notebook2.AddPage( self.m_panel6, u"Take Off/Land", False )
+		self.m_notebook2.AddPage( self.m_panel6, u"Take Off/Land", True )
 		self.m_panel2 = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer5 = wx.BoxSizer( wx.HORIZONTAL )
 
@@ -117,11 +117,13 @@ class MyFrame1 ( wx.Frame ):
 		self.m_panel4.SetSizer( bSizer15 )
 		self.m_panel4.Layout()
 		bSizer15.Fit( self.m_panel4 )
-		self.m_notebook2.AddPage( self.m_panel4, u"Sleep", True )
+		self.m_notebook2.AddPage( self.m_panel4, u"Sleep", False )
 		self.m_panel5 = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer12 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.fld_direction = wx.TextCtrl( self.m_panel5, wx.ID_ANY, u"direction", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fld_directionChoices = [ u"up", u"down", u"left", u"right" ]
+		self.fld_direction = wx.ComboBox( self.m_panel5, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, fld_directionChoices, 0 )
+		self.fld_direction.SetSelection( 0 )
 		bSizer12.Add( self.fld_direction, 1, wx.ALL, 5 )
 
 		self.btn_addFlip = wx.Button( self.m_panel5, wx.ID_ANY, u"Add", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -163,6 +165,9 @@ class MyFrame1 ( wx.Frame ):
 		self.btn_runCommands = wx.Button( self, wx.ID_ANY, u"Run Commands", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer3.Add( self.btn_runCommands, 0, wx.ALL|wx.EXPAND, 5 )
 
+		self.btn_runFromSelection = wx.Button( self, wx.ID_ANY, u"Run Commands From Selection", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer3.Add( self.btn_runFromSelection, 0, wx.ALL|wx.EXPAND, 5 )
+
 
 		self.SetSizer( bSizer3 )
 		self.Layout()
@@ -186,6 +191,7 @@ class MyFrame1 ( wx.Frame ):
 		self.btn_down.Bind( wx.EVT_BUTTON, self.OnDown )
 		self.btn_clear.Bind( wx.EVT_BUTTON, self.OnClear )
 		self.btn_runCommands.Bind( wx.EVT_BUTTON, self.OnRunCommands )
+		self.btn_runFromSelection.Bind( wx.EVT_BUTTON, self.OnRunFromSelection )
 
 	def __del__( self ):
 		pass
@@ -235,6 +241,9 @@ class MyFrame1 ( wx.Frame ):
 		event.Skip()
 
 	def OnRunCommands( self, event ):
+		event.Skip()
+
+	def OnRunFromSelection( self, event ):
 		event.Skip()
 
 

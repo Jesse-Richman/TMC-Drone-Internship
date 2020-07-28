@@ -21,6 +21,7 @@ class PyParrot(app_gui.MyFrame1):
 
         self.bebop = Bebop()
         self.isConnected = False
+        # TODO try to load JSON file from in this method
     
     def OnConnect( self, event ):
         self.isConnected = self.bebop.connect(10)
@@ -31,7 +32,9 @@ class PyParrot(app_gui.MyFrame1):
 
     def OnDisconnect( self, event ):
         self.bebop.disconnect()
+        self.isConnected = False
         self.statusBar.SetStatusText('Disconnected')
+        self.statusBar.SetStatusText(f'Battery: {self.bebop.sensors.battery}%', 1)
 
     def OnTakeOff( self, event ):
         self.bebop.safe_takeoff(10)
@@ -71,7 +74,7 @@ class PyParrot(app_gui.MyFrame1):
         self._addCommand(f'{CmdType.Sleep.value},{sleep}')
 
     def OnAddFlip( self, event ):
-        dir = int(self.fld_direction)
+        dir = str(self.fld_direction.GetValue())
         self._addCommand(f'{CmdType.Flip.value},{dir}')
 
     def OnRemove( self, event ):
@@ -100,10 +103,16 @@ class PyParrot(app_gui.MyFrame1):
     def OnClear( self, event ):
         self.lc_commands.DeleteAllItems()
 
+    def OnRunFromSelection( self, event ):
+        print('Not implemented yet')
+        event.Skip()
+
     def OnRunCommands( self, event ):
         """Go through each item in lc_commands and convert the string to 
         a list. Then use the first item in the list to determine the 
         command type, and the rest of the items are the params"""
+        # TODO check if we are truly connected to the drone by using:
+        # self.bebop.drone_connection.is_connected
         if not self.isConnected:
             return
 
@@ -127,7 +136,7 @@ class PyParrot(app_gui.MyFrame1):
                 self.bebop.move_relative(int(args[1]), int(args[2]), int(args[3]), math.radians(int(args[4])))
 
             elif args[0] == CmdType.Flip.value:
-                self.bebop.flip(int(args[1]))
+                self.bebop.flip(str(args[1]))
     
     def _addCommand(self, cmd: str):
         self.lc_commands.InsertItem(self.lc_commands.GetItemCount(), cmd)
