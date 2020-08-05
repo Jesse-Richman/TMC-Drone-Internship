@@ -77,6 +77,9 @@ class PyParrot(app_gui.MyFrame1):
         dir = str(self.fld_direction.GetValue())
         self._addCommand(f'{CmdType.Flip.value},{dir}')
 
+    def OnAddFlyGrid(self, event):
+        print('Not implemented yet') # TODO implement this method
+
     def OnRemove( self, event ):
         self.lc_commands.DeleteItem(self.lc_commands.GetFocusedItem())
 
