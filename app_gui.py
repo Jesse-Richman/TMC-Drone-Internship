@@ -209,6 +209,7 @@ class MyFrame1 ( wx.Frame ):
 		self.Centre( wx.BOTH )
 
 		# Connect Events
+		self.Bind( wx.EVT_CLOSE, self.OnClose )
 		self.btn_connect.Bind( wx.EVT_BUTTON, self.OnConnect )
 		self.btn_disconnect.Bind( wx.EVT_BUTTON, self.OnDisconnect )
 		self.btn_takeOff.Bind( wx.EVT_BUTTON, self.OnTakeOff )
@@ -232,6 +233,9 @@ class MyFrame1 ( wx.Frame ):
 
 
 	# Virtual event handlers, overide them in your derived class
+	def OnClose( self, event ):
+		event.Skip()
+
 	def OnConnect( self, event ):
 		event.Skip()
 
