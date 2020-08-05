@@ -54,7 +54,7 @@ class MyFrame1 ( wx.Frame ):
 		self.m_panel6.SetSizer( bSizer131 )
 		self.m_panel6.Layout()
 		bSizer131.Fit( self.m_panel6 )
-		self.m_notebook2.AddPage( self.m_panel6, u"Take Off/Land", False )
+		self.m_notebook2.AddPage( self.m_panel6, u"Take Off/Land", True )
 		self.m_panel2 = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer5 = wx.BoxSizer( wx.HORIZONTAL )
 
@@ -117,11 +117,13 @@ class MyFrame1 ( wx.Frame ):
 		self.m_panel4.SetSizer( bSizer15 )
 		self.m_panel4.Layout()
 		bSizer15.Fit( self.m_panel4 )
-		self.m_notebook2.AddPage( self.m_panel4, u"Sleep", True )
+		self.m_notebook2.AddPage( self.m_panel4, u"Sleep", False )
 		self.m_panel5 = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer12 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.fld_direction = wx.TextCtrl( self.m_panel5, wx.ID_ANY, u"direction", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fld_directionChoices = [ u"up", u"down", u"left", u"right" ]
+		self.fld_direction = wx.ComboBox( self.m_panel5, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, fld_directionChoices, 0 )
+		self.fld_direction.SetSelection( 0 )
 		bSizer12.Add( self.fld_direction, 1, wx.ALL, 5 )
 
 		self.btn_addFlip = wx.Button( self.m_panel5, wx.ID_ANY, u"Add", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -132,6 +134,39 @@ class MyFrame1 ( wx.Frame ):
 		self.m_panel5.Layout()
 		bSizer12.Fit( self.m_panel5 )
 		self.m_notebook2.AddPage( self.m_panel5, u"Flip", False )
+		self.m_panel6 = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		bSizer10 = wx.BoxSizer( wx.VERTICAL )
+
+		self.m_staticText1 = wx.StaticText( self.m_panel6, wx.ID_ANY, u"Creates a flight pattern that resembles a grid. At each intersect point of the grid the drone will do a flip. It is important to note that the flight grid's orientation is forward and to the right relative to the drone. This means that you should place your drone in the bottom left corner facing the top left corner to correctly fly this pattern. The first three inputs are measured in meters.", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText1.Wrap( -1 )
+
+		bSizer10.Add( self.m_staticText1, 1, wx.ALL, 5 )
+
+		bSizer11 = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.fld_gridHeight = wx.TextCtrl( self.m_panel6, wx.ID_ANY, u"flight hight (y)", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer11.Add( self.fld_gridHeight, 1, wx.ALL, 5 )
+
+		self.fld_gridLength = wx.TextCtrl( self.m_panel6, wx.ID_ANY, u"length (x)", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer11.Add( self.fld_gridLength, 1, wx.ALL, 5 )
+
+		self.fld_gridWidth = wx.TextCtrl( self.m_panel6, wx.ID_ANY, u"width (y)", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer11.Add( self.fld_gridWidth, 1, wx.ALL, 5 )
+
+		self.fld_gridLines = wx.TextCtrl( self.m_panel6, wx.ID_ANY, u"# of bisecting lines", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer11.Add( self.fld_gridLines, 1, wx.ALL, 5 )
+
+		self.btn_addFlyGrid = wx.Button( self.m_panel6, wx.ID_ANY, u"Add", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer11.Add( self.btn_addFlyGrid, 0, wx.ALL, 5 )
+
+
+		bSizer10.Add( bSizer11, 0, wx.EXPAND, 5 )
+
+
+		self.m_panel6.SetSizer( bSizer10 )
+		self.m_panel6.Layout()
+		bSizer10.Fit( self.m_panel6 )
+		self.m_notebook2.AddPage( self.m_panel6, u"Fly Grid Pattern", False )
 
 		bSizer3.Add( self.m_notebook2, 1, wx.EXPAND |wx.ALL, 5 )
 
@@ -163,6 +198,9 @@ class MyFrame1 ( wx.Frame ):
 		self.btn_runCommands = wx.Button( self, wx.ID_ANY, u"Run Commands", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer3.Add( self.btn_runCommands, 0, wx.ALL|wx.EXPAND, 5 )
 
+		self.btn_runFromSelection = wx.Button( self, wx.ID_ANY, u"Run Commands From Selection", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer3.Add( self.btn_runFromSelection, 0, wx.ALL|wx.EXPAND, 5 )
+
 
 		self.SetSizer( bSizer3 )
 		self.Layout()
@@ -171,6 +209,7 @@ class MyFrame1 ( wx.Frame ):
 		self.Centre( wx.BOTH )
 
 		# Connect Events
+		self.Bind( wx.EVT_CLOSE, self.OnClose )
 		self.btn_connect.Bind( wx.EVT_BUTTON, self.OnConnect )
 		self.btn_disconnect.Bind( wx.EVT_BUTTON, self.OnDisconnect )
 		self.btn_takeOff.Bind( wx.EVT_BUTTON, self.OnTakeOff )
@@ -181,17 +220,22 @@ class MyFrame1 ( wx.Frame ):
 		self.btn_addDirect.Bind( wx.EVT_BUTTON, self.OnAddDirect )
 		self.btn_addSleep.Bind( wx.EVT_BUTTON, self.OnAddSleep )
 		self.btn_addFlip.Bind( wx.EVT_BUTTON, self.OnAddFlip )
+		self.btn_addFlyGrid.Bind( wx.EVT_BUTTON, self.OnAddFlyGrid )
 		self.btn_remove.Bind( wx.EVT_BUTTON, self.OnRemove )
 		self.btn_up.Bind( wx.EVT_BUTTON, self.OnUp )
 		self.btn_down.Bind( wx.EVT_BUTTON, self.OnDown )
 		self.btn_clear.Bind( wx.EVT_BUTTON, self.OnClear )
 		self.btn_runCommands.Bind( wx.EVT_BUTTON, self.OnRunCommands )
+		self.btn_runFromSelection.Bind( wx.EVT_BUTTON, self.OnRunFromSelection )
 
 	def __del__( self ):
 		pass
 
 
 	# Virtual event handlers, overide them in your derived class
+	def OnClose( self, event ):
+		event.Skip()
+
 	def OnConnect( self, event ):
 		event.Skip()
 
@@ -222,6 +266,9 @@ class MyFrame1 ( wx.Frame ):
 	def OnAddFlip( self, event ):
 		event.Skip()
 
+	def OnAddFlyGrid( self, event ):
+		event.Skip()
+
 	def OnRemove( self, event ):
 		event.Skip()
 
@@ -235,6 +282,9 @@ class MyFrame1 ( wx.Frame ):
 		event.Skip()
 
 	def OnRunCommands( self, event ):
+		event.Skip()
+
+	def OnRunFromSelection( self, event ):
 		event.Skip()
 
 

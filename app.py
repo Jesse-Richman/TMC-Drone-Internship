@@ -1,8 +1,6 @@
-import wx
+import wx, math, enum, os, json
 import app_gui
 from pyparrot.Bebop import Bebop
-import math
-import enum
 
 class CmdType(enum.Enum):
     Direct="direct"
@@ -18,19 +16,32 @@ class PyParrot(app_gui.MyFrame1):
         self.statusBar.SetStatusWidths([100, -1])
         self.statusBar.SetStatusText('Not Connected')
         self.lc_commands.InsertColumn(0, 'command', width=300)
-
         self.bebop = Bebop()
+
+        # load saved commands from file
+        self._loadJsonFile()
     
+    def OnClose( self, event ):
+        if wx.MessageBox("Commands are not yet saved. Do you want to save now?", "Save Changes", wx.ICON_QUESTION | wx.YES_NO) == wx.YES:
+            # Retrive commands from lc_commands
+            cmdList = []
+            for i in range(self.lc_commands.GetItemCount()):
+                cmdList.append(self.lc_commands.GetItemText(i))
+            self._saveJsonFile(cmdList)
+
+        event.Skip() # calls the parent close method
+
     def OnConnect( self, event ):
-        state = self.bebop.connect(10)
+        isConnected = self.bebop.connect(10)
         statusText = 'Connected'
-        if not state:
+        if not isConnected:
             statusText = 'Not ' + statusText
         self.statusBar.SetStatusText(statusText)
 
     def OnDisconnect( self, event ):
         self.bebop.disconnect()
         self.statusBar.SetStatusText('Disconnected')
+        self.statusBar.SetStatusText(f'Battery: {self.bebop.sensors.battery}%', 1)
 
     def OnTakeOff( self, event ):
         self.bebop.safe_takeoff(10)
@@ -70,8 +81,12 @@ class PyParrot(app_gui.MyFrame1):
         self._addCommand(f'{CmdType.Sleep.value},{sleep}')
 
     def OnAddFlip( self, event ):
-        dir = int(self.fld_direction)
+        dir = str(self.fld_direction.GetValue())
         self._addCommand(f'{CmdType.Flip.value},{dir}')
+
+    def OnAddFlyGrid(self, event):
+        print('Not implemented yet') # TODO implement this method
+        event.Skip()
 
     def OnRemove( self, event ):
         self.lc_commands.DeleteItem(self.lc_commands.GetFocusedItem())
@@ -99,10 +114,32 @@ class PyParrot(app_gui.MyFrame1):
     def OnClear( self, event ):
         self.lc_commands.DeleteAllItems()
 
+    def OnRunFromSelection( self, event ):
+        index = self.lc_commands.GetFocusedItem()
+        while index > 0:
+            self.lc_commands.DeleteItem(index - 1)
+            index = self.lc_commands.GetFocusedItem()
+            
+        self.OnRunCommands(event)
+
     def OnRunCommands( self, event ):
         """Go through each item in lc_commands and convert the string to 
         a list. Then use the first item in the list to determine the 
         command type, and the rest of the items are the params"""
+
+        # Retrive commands from lc_commands
+        cmdList = []
+        for i in range(self.lc_commands.GetItemCount()):
+            cmdList.append(self.lc_commands.GetItemText(i))
+
+        self._saveJsonFile(cmdList)
+        
+        # Abort running attempt if not connected
+        if not self.bebop.drone_connection.is_connected:
+            print("No Connection. Aborting process.")
+            return
+
+        # === Run Commands ===
         for i in range(self.lc_commands.GetItemCount()):
             args = self.lc_commands.GetItemText(i).split(',')
             self.statusBar.SetStatusText(f'Executing command: {args}', 1)
@@ -123,13 +160,34 @@ class PyParrot(app_gui.MyFrame1):
                 self.bebop.move_relative(int(args[1]), int(args[2]), int(args[3]), math.radians(int(args[4])))
 
             elif args[0] == CmdType.Flip.value:
-                self.bebop.flip(int(args[1]))
+                self.bebop.flip(str(args[1]))
     
+    def _loadJsonFile(self):
+        # Open up JSON file with last run commands
+        filePath = os.getcwd() + os.sep + "cmd_data.json"
+        if os.path.isfile(filePath):
+            f = open(filePath,"r")
+            s = f.read()
+            commands = json.loads(s)
+            # Input commands into GUI interface
+            for c in commands:
+                self._addCommand(c)
+
+    def _saveJsonFile(self, cmdList):
+        # Place all commands into JSON file and write them to the disk
+        jsonStr = json.dumps(cmdList)
+        filePath = os.getcwd() + os.sep + "cmd_data.json"
+        with open(filePath,"w") as f:
+            f.write(jsonStr)
+
     def _addCommand(self, cmd: str):
         self.lc_commands.InsertItem(self.lc_commands.GetItemCount(), cmd)
         self.statusBar.SetStatusText(f'Added command: {cmd}', 1)
 # end of class
-
-application = wx.App(False) # create new application
-PyParrot(None).Show(True) # build and show our frame
-application.MainLoop() # run the application
+if __name__ == "__main__":
+    try:
+        application = wx.App(False) # create new application
+        PyParrot(None).Show(True) # build and show our frame
+        application.MainLoop() # run the application
+    except Exception as e:
+        print(e)
