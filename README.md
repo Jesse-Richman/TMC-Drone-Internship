@@ -5,4 +5,4 @@ To be able to run this program, PyParrot and wxPython will need to be installed.
   
 ## Disclamer
 
-**This program has not yet been tested in a live environment and there is no guarantee that it will function properly. Use at your own risk. You alone are responsible for your actions, I am not.**  
+**This program has not been fully tested in a live environment and there is no guarantee that it will function properly. Use at your own risk. You alone are responsible for your actions, I am not.**  
