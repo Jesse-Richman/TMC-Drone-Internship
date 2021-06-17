@@ -1,5 +1,5 @@
 import wx, math, enum, os, json
-import app_gui
+import gui
 from pyparrot.Bebop import Bebop
 
 class CmdType(enum.Enum):
@@ -10,9 +10,9 @@ class CmdType(enum.Enum):
     Land="land"
     Flip="flip"
 
-class PyParrot(app_gui.MyFrame1):
+class PyParrot(gui.MyFrame1):
     def __init__(self, parent):
-        app_gui.MyFrame1.__init__(self, parent)
+        gui.MyFrame1.__init__(self, parent)
         self.statusBar.SetStatusWidths([100, -1])
         self.statusBar.SetStatusText('Not Connected')
         self.lc_commands.InsertColumn(0, 'command', width=300)
@@ -29,6 +29,7 @@ class PyParrot(app_gui.MyFrame1):
                 cmdList.append(self.lc_commands.GetItemText(i))
             self._saveJsonFile(cmdList)
 
+        self.OnDisconnect(None)
         event.Skip() # calls the parent close method
 
     def OnConnect( self, event ):
@@ -85,8 +86,69 @@ class PyParrot(app_gui.MyFrame1):
         self._addCommand(f'{CmdType.Flip.value},{dir}')
 
     def OnAddFlyGrid(self, event):
-        print('Not implemented yet') # TODO implement this method
-        event.Skip()
+        print("Make sure you take off first!")
+        heightGain = int(self.fld_gridHeight.GetValue())
+        lengthForward = int(self.fld_gridLength.GetValue())
+        width = int(self.fld_gridWidth.GetValue())
+        biLines = int(self.fld_gridLines.GetValue())
+        widthSection = width/(biLines+1)
+
+        # Rise
+        self._addCommand(f'{CmdType.Relative.value},0,0,{heightGain},0')
+        # Fly forward and turn right
+        self._addCommand(f'{CmdType.Relative.value},{lengthForward},0,0,90')
+        # Flip
+        self._addCommand(f'{"flip"},{"up"}')
+        # Fly right and turn right
+        self._addCommand(f'{CmdType.Relative.value},{widthSection},0,0,90')
+        # Flip
+        self._addCommand(f'{"flip"},{"up"}')
+        # Fly back and turn left
+        self._addCommand(f'{CmdType.Relative.value},{lengthForward},0,0,-90')
+        # Flip
+        self._addCommand(f'{"flip"},{"up"}')
+        while (biLines >= 2):
+            biLines -= 2
+            # Fly right and turn left
+            self._addCommand(f'{CmdType.Relative.value},{widthSection},0,0,-90')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+            # Fly forward and turn right
+            self._addCommand(f'{CmdType.Relative.value},{lengthForward},0,0,90')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+            # Fly right and turn right
+            self._addCommand(f'{CmdType.Relative.value},{widthSection},0,0,90')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+            # Fly back and turn left
+            self._addCommand(f'{CmdType.Relative.value},{lengthForward},0,0,-90')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+        if (biLines == 1):
+            biLines -= 1
+            # Fly right and turn left
+            self._addCommand(f'{CmdType.Relative.value},{widthSection},0,0,-90')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+            # Fly forward
+            self._addCommand(f'{CmdType.Relative.value},{lengthForward},0,0,0')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+            # Fly back left to home
+            self._addCommand(f'{CmdType.Relative.value},{-lengthForward},{-width},0,0')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+            # Descend
+            self._addCommand(f'{CmdType.Relative.value},0,0,{-heightGain},0')
+        else:
+            # Fly left and turn left
+            self._addCommand(f'{CmdType.Relative.value},{-width},0,0,-90')
+            # Flip
+            self._addCommand(f'{"flip"},{"up"}')
+            # Descend
+            self._addCommand(f'{CmdType.Relative.value},0,0,{-heightGain},0')
+        print("Make sure you land!")
 
     def OnRemove( self, event ):
         self.lc_commands.DeleteItem(self.lc_commands.GetFocusedItem())
@@ -143,24 +205,29 @@ class PyParrot(app_gui.MyFrame1):
         for i in range(self.lc_commands.GetItemCount()):
             args = self.lc_commands.GetItemText(i).split(',')
             self.statusBar.SetStatusText(f'Executing command: {args}', 1)
+            try:
+                if (args[0] == CmdType.Sleep.value):
+                    self.bebop.smart_sleep(int(args[1]))
 
-            if (args[0] == CmdType.Sleep.value):
-                self.bebop.smart_sleep(int(args[1]))
+                elif args[0] == CmdType.TakeOff.value:
+                    self.bebop.safe_takeoff(int(args[1]))
 
-            elif args[0] == CmdType.TakeOff.value:
-                self.bebop.safe_takeoff(int(args[1]))
+                elif args[0] == CmdType.Land.value:
+                    self.bebop.safe_land(int(args[1]))
 
-            elif args[0] == CmdType.Land.value:
-                self.bebop.safe_land(int(args[1]))
+                elif args[0] == CmdType.Direct.value:
+                    self.bebop.fly_direct(int(args[1]), int(args[2]), int(args[3]), int(args[4]), int(args[5]))
 
-            elif args[0] == CmdType.Direct.value:
-                self.bebop.fly_direct(int(args[1]), int(args[2]), int(args[3]), int(args[4]), int(args[5]))
+                elif args[0] == CmdType.Relative.value:
+                    self.bebop.move_relative(int(args[1]), int(args[2]), int(args[3]), math.radians(int(args[4])))
 
-            elif args[0] == CmdType.Relative.value:
-                self.bebop.move_relative(int(args[1]), int(args[2]), int(args[3]), math.radians(int(args[4])))
-
-            elif args[0] == CmdType.Flip.value:
-                self.bebop.flip(str(args[1]))
+                elif args[0] == CmdType.Flip.value:
+                    self.bebop.flip(str(args[1]))
+            except Exception as e:
+                print("Error occurred: ")
+                print(e)
+                continue
+            
     
     def _loadJsonFile(self):
         # Open up JSON file with last run commands
